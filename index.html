@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تريدات ماب السرقة</title>
+
+<style>
+body { font-family: Arial; text-align: center; margin: 0; }
+header { background: #222; color: #fff; padding: 15px; }
+button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+section { display: none; padding: 20px; }
+.product { border: 1px solid #ccc; padding: 10px; margin: 10px; display: inline-block; width: 220px; }
+.product img { width: 200px; height: 150px; margin-bottom: 5px; object-fit: cover; }
+input { padding: 7px; margin: 5px; width: 220px; }
+a { color: #007bff; text-decoration: none; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1> تريدات ماب السرقة</h1>
+  <button onclick="show('buy')">تريدات</button>
+  <button onclick="show('sell')">إضافة عرض</button>
+</header>
+
+<!-- ===== عرض التريدات ===== -->
+<section id="buy">
+  <h2>التريدات</h2>
+  <div id="products"></div>
+</section>
+
+<!-- ===== إضافة عرض ===== -->
+<section id="sell">
+  <h2>إضافة عرض (عرض واحد باليوم)</h2>
+
+  <input id="name" placeholder="اسم المنتج"><br>
+  <input id="tiktok" placeholder="رابط حسابك في تيك توك"><br>
+  <input id="images" type="file" accept="image/*" multiple><br>
+  <small>يمكنك رفع حتى 5 صور</small><br><br>
+
+  <button onclick="addProduct()">نشر العرض</button>
+  <p id="msg" style="color:red"></p>
+</section>
+
+<script>
+let products = [];
+
+function show(id) {
+  buy.style.display = sell.style.display = "none";
+  document.getElementById(id).style.display = "block";
+  if (id === "buy") render();
+}
+
+function canPostToday() {
+  const today = new Date().toDateString();
+  return localStorage.getItem("lastPostDate") !== today;
+}
+
+function addProduct() {
+  if (!canPostToday()) {
+    msg.textContent = "❌ لا يمكنك نشر أكثر من عرض واحد في اليوم";
+    return;
+  }
+
+  const name = document.getElementById("name").value;
+  const tiktok = document.getElementById("tiktok").value;
+  const files = document.getElementById("images").files;
+
+  if (!name || !tiktok || files.length === 0) {
+    msg.textContent = "❌ الرجاء تعبئة جميع الحقول";
+    return;
+  }
+
+  if (files.length > 5) {
+    msg.textContent = "❌ الحد الأقصى 5 صور";
+    return;
+  }
+
+  let imgs = [];
+  let loaded = 0;
+
+  for (let f of files) {
+    const r = new FileReader();
+    r.onload = e => {
+      imgs.push(e.target.result);
+      loaded++;
+      if (loaded === files.length) {
+        products.push({ name, tiktok, imgs });
+        localStorage.setItem("lastPostDate", new Date().toDateString());
+        msg.style.color = "green";
+        msg.textContent = "✅ تم نشر العرض";
+      }
+    };
+    r.readAsDataURL(f);
+  }
+}
+
+function render() {
+  const box = document.getElementById("products");
+  box.innerHTML = "";
+
+  if (products.length === 0) {
+    box.innerHTML = "<p>لا توجد تريدات حالياً</p>";
+    return;
+  }
+
+  products.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "product";
+
+    div.innerHTML = `
+      <img src="${p.imgs[0]}">
+      <h3>${p.name}</h3>
+      <p>  <a href="${p.tiktok}" target="_blank">التواصل عبر تيك توك</a></p>
+    `;
+    box.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
